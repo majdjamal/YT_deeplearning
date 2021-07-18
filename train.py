@@ -3,12 +3,30 @@ __author__ = "Majd Jamal | majdj@kth.se "
 
 import tensorflow.keras.applications as app
 import tensorflow.keras.datasets as ds
+import matplotlib.pyplot as plt
 
 def loadData():
 	""" Load data and return it as numpy array.
 	"""
 	(x_train, y_train), (x_test, y_test) = ds.cifar10.load_data()
 	return x_train, y_train, x_test, y_test
+
+def savef(train, val, y_label):
+  """ Plots and saves figure of training and validation
+      loss or accuacy
+  :param train: Training history
+  :param val: Validation history
+  :y_label: Type of history data, i.e. either 'Loss' or 'Accuracy'
+  """
+
+  plt.style.use('seaborn')
+  plt.plot(train, color = 'red', label = 'Training ' + y_label)
+  plt.plot(val, color = 'blue',  Label = 'Validation ' + y_label)
+  plt.xlabel('Epoch')
+  plt.ylabel(y_label)
+  plt.legend()
+  plt.savefig(y_label)
+  plt.close()
 
 def model(dim = (32, 32, 3), Nclasses = 10):
 	""" Creates and compiles a deep learning model.
@@ -22,6 +40,7 @@ def model(dim = (32, 32, 3), Nclasses = 10):
 						    classes= Nclasses,
 						    classifier_activation="softmax",
 							)
+
 	net.compile(
 	    optimizer="adam",
 	    loss="sparse_categorical_crossentropy",
@@ -31,14 +50,24 @@ def model(dim = (32, 32, 3), Nclasses = 10):
 	return net
 
 def train(model, X_train, y_train):
-	""" Trains the model.
+	""" Trains the model and saves training history.
 	:param model: Tensorflow network
 	:param X_train: Training patterns, shape = (Npts, 32,32,3)
 	:param y_train: Training labels, shape = (Npts, 1)
 	:return model: trained network
 	"""
-	model.fit(X_train, y_train, epochs=20,
+	history = model.fit(X_train, y_train, epochs=20,
                     validation_split = 0.3)
+
+  # plotting training history
+	train_loss = history.history['loss']
+	val_loss = history.history['val_loss']
+
+	train_acc = history.history['accuracy']
+	val_acc = history.history['val_accuracy']
+
+	savef(train_loss, val_loss, 'Loss')
+	savef(train_acc, val_acc, 'Accuracy')
 
 	return model
 
@@ -62,6 +91,5 @@ def main():
 	acc = evaluate(net, X_test, y_test)
 
 	print('\n Accuracy is: ', str(round(acc * 100,2)) + '%')
-
 
 main()
